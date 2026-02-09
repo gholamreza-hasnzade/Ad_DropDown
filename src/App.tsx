@@ -1,35 +1,90 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { AdvancedDropdown } from "./components/AdvancedDropdown";
+import type { DropdownGroup, DropdownItem } from "./components/AdvancedDropdown";
+
+const groupedItems: DropdownGroup[] = [
+  {
+    label: "Fruits",
+    items: [
+      { id: "apple", label: "Apple", value: "apple" },
+      { id: "banana", label: "Banana", value: "banana" },
+      { id: "cherry", label: "Cherry", value: "cherry" },
+      { id: "date", label: "Date", value: "date" },
+      { id: "elderberry", label: "Elderberry", value: "elderberry" },
+    ],
+  },
+  {
+    label: "Vegetables",
+    items: [
+      { id: "asparagus", label: "Asparagus", value: "asparagus" },
+      { id: "broccoli", label: "Broccoli", value: "broccoli" },
+      { id: "carrot", label: "Carrot", value: "carrot" },
+      { id: "dill", label: "Dill", value: "dill" },
+    ],
+  },
+  {
+    label: "Proteins",
+    items: [
+      { id: "beef", label: "Beef", value: "beef" },
+      { id: "chicken", label: "Chicken", value: "chicken" },
+      { id: "fish", label: "Fish", value: "fish" },
+    ],
+  },
+];
+
+const flatItems: DropdownItem[] = Array.from({ length: 200 }, (_, i) => ({
+  id: `item-${i}`,
+  label: `Option ${i + 1}`,
+  value: `item-${i}`,
+}));
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [groupedSelected, setGroupedSelected] = useState<DropdownItem[]>([]);
+  const [flatSelected, setFlatSelected] = useState<DropdownItem[]>([]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-screen bg-slate-50 p-8 dark:bg-slate-900">
+      <div className="mx-auto max-w-2xl space-y-12">
+        <div>
+          <h1 className="mb-6 text-2xl font-bold text-slate-800 dark:text-slate-100">
+            Advanced Dropdown
+          </h1>
+          <p className="mb-8 text-slate-600 dark:text-slate-400">
+            Multi-select with search, grouping, select all/none, selection count,
+            and virtualization for large lists.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+            Grouped items (Fruits, Vegetables, Proteins)
+          </h2>
+          <AdvancedDropdown
+            items={groupedItems}
+            value={groupedSelected}
+            onChange={setGroupedSelected}
+            placeholder="Select foods..."
+            searchPlaceholder="Search..."
+            virtualizeThreshold={0}
+          />
+        </div>
+
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+            Large list (200 items, virtualized)
+          </h2>
+          <AdvancedDropdown
+            items={flatItems}
+            value={flatSelected}
+            onChange={setFlatSelected}
+            placeholder="Select options..."
+            searchPlaceholder="Search..."
+            virtualizeThreshold={10}
+          />
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
