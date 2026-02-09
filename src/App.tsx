@@ -66,6 +66,8 @@ function App() {
             placeholder="Select foods..."
             searchPlaceholder="Search..."
             virtualizeThreshold={0}
+            multiple={false}
+
           />
         </div>
 

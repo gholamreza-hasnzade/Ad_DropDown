@@ -25,6 +25,7 @@ export function AdvancedDropdown({
   items,
   value,
   onChange,
+  multiple = true,
   placeholder = "Select...",
   searchPlaceholder = "Search...",
   maxHeight = 320,
@@ -70,6 +71,14 @@ export function AdvancedDropdown({
     [rowHeights]
   );
 
+  const selectedLabels = useMemo(() => value.map((item) => item.label), [value]);
+  const maxVisibleLabels = 3;
+  const visibleLabels = useMemo(
+    () => selectedLabels.slice(0, maxVisibleLabels),
+    [selectedLabels]
+  );
+  const hiddenCount = Math.max(0, selectedLabels.length - maxVisibleLabels);
+
   const virtualizer = useVirtualizer({
     count: filtered.length,
     getScrollElement: () => parentRef.current,
@@ -103,9 +112,15 @@ export function AdvancedDropdown({
 
   return (
     <Listbox
-      value={value}
-      onChange={(selected: DropdownItem[]) => onChange(selected)}
-      multiple
+      value={multiple ? value : value[0] ?? null}
+      onChange={(selected: DropdownItem[] | DropdownItem | null) => {
+        if (multiple) {
+          onChange(selected as DropdownItem[]);
+        } else {
+          onChange(selected ? [selected as DropdownItem] : []);
+        }
+      }}
+      multiple={multiple}
       disabled={disabled}
       as="div"
       className="relative w-full"
@@ -122,9 +137,46 @@ export function AdvancedDropdown({
         `}
       >
         <span className="block truncate">
-          {value.length === 0
-            ? placeholder
-            : `${value.length} selected`}
+          {value.length === 0 ? (
+            placeholder
+          ) : (
+            <>
+              {visibleLabels.join(", ")}
+              {hiddenCount > 0 && (
+                <span className="group relative ml-1 inline-flex items-center">
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="inline-flex items-center rounded text-amber-600 hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 dark:text-amber-400"
+                  >
+                    , ... +{hiddenCount}
+                  </span>
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-56 rounded-md border border-slate-200
+                      bg-white p-2 text-xs text-slate-700 shadow-lg opacity-0 transition-opacity
+                      group-hover:opacity-100 group-focus-within:opacity-100 dark:border-slate-700
+                      dark:bg-slate-800 dark:text-slate-200"
+                  >
+                    {selectedLabels.join(", ")}
+                  </span>
+                </span>
+              )}
+            </>
+          )}
         </span>
         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
           <svg
@@ -165,27 +217,32 @@ export function AdvancedDropdown({
               dark:placeholder:text-slate-500"
             autoComplete="off"
           />
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              onClick={handleSelectAll}
-              className="rounded bg-amber-500 px-2 py-1 text-xs font-medium text-white
-                transition hover:bg-amber-600 focus:outline-none focus:ring-2
-                focus:ring-amber-500 focus:ring-offset-1"
-            >
-              Select all
-            </button>
-            <button
-              type="button"
-              onClick={handleSelectNone}
-              className="rounded border border-slate-300 px-2 py-1 text-xs font-medium
-                text-slate-700 transition hover:bg-slate-100 focus:outline-none
-                focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 dark:border-slate-600
-                dark:text-slate-300 dark:hover:bg-slate-700"
-            >
-              Select none
-            </button>
-          </div>
+          {multiple && (
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="rounded bg-amber-500 px-2 py-1 text-xs font-medium text-white
+                  transition hover:bg-amber-600 focus:outline-none focus:ring-2
+                  focus:ring-amber-500 focus:ring-offset-1"
+              >
+                Select all
+              </button>
+              <button
+                type="button"
+                onClick={handleSelectNone}
+                className="rounded border border-slate-300 px-2 py-1 text-xs font-medium
+                  text-slate-700 transition hover:bg-slate-100 focus:outline-none
+                  focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 dark:border-slate-600
+                  dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                Select none
+              </button>
+              <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
+                {value.length} selected
+              </span>
+            </div>
+          )}
         </div>
 
         <div
@@ -251,17 +308,19 @@ export function AdvancedDropdown({
                       height,
                     }}
                   >
-                    <span
-                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border
-                        ${isSelected(row.item, value) ? "border-amber-500 bg-amber-500" : "border-slate-300"}
-                      `}
-                    >
-                      {isSelected(row.item, value) && (
-                        <svg className="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
-                          <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
-                        </svg>
-                      )}
-                    </span>
+                    {multiple && (
+                      <span
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border
+                          ${isSelected(row.item, value) ? "border-amber-500 bg-amber-500" : "border-slate-300"}
+                        `}
+                      >
+                        {isSelected(row.item, value) && (
+                          <svg className="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
+                            <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
+                          </svg>
+                        )}
+                      </span>
+                    )}
                     <span className="truncate">{row.item.label}</span>
                   </ListboxOption>
                 );
@@ -294,17 +353,19 @@ export function AdvancedDropdown({
                       ${row.item.disabled ? "cursor-not-allowed opacity-50" : ""}
                     `}
                   >
-                    <span
-                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border
-                        ${isSelected(row.item, value) ? "border-amber-500 bg-amber-500" : "border-slate-300"}
-                      `}
-                    >
-                      {isSelected(row.item, value) && (
-                        <svg className="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
-                          <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
-                        </svg>
-                      )}
-                    </span>
+                    {multiple && (
+                      <span
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border
+                          ${isSelected(row.item, value) ? "border-amber-500 bg-amber-500" : "border-slate-300"}
+                        `}
+                      >
+                        {isSelected(row.item, value) && (
+                          <svg className="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
+                            <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
+                          </svg>
+                        )}
+                      </span>
+                    )}
                     <span className="truncate">{row.item.label}</span>
                   </ListboxOption>
                 );

@@ -20,6 +20,8 @@ export type AdvancedDropdownProps = {
   items: DropdownDataSource;
   value: DropdownItem[];
   onChange: (selected: DropdownItem[]) => void;
+  /** Enable multi-select. Default: true */
+  multiple?: boolean;
   placeholder?: string;
   searchPlaceholder?: string;
   maxHeight?: number;
